@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/reporte.css">
+    <title>Reporte Personalizado</title>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>⚙️ Reporte Personalizado</h1>
+            <p>Configura los filtros para generar tu reporte</p>
+        </div>
+
+        <!-- Formulario -->
+        <div class="form-card">
+            <!-- Información -->
+            <div class="info-box">
+                <h4>📋 Instrucciones</h4>
+                <ul>
+                    <li>Selecciona los filtros que desees aplicar</li>
+                    <li>Los campos vacíos serán ignorados</li>
+                    <li>Puedes combinar múltiples filtros</li>
+                    <li>Elige el formato de salida (PDF o Excel)</li>
+                </ul>
+            </div>
+
+            <form method="POST" action="/reporte/personalizado">
+                <!-- Filtros -->
+                <div class="form-section">
+                    <h3>🔍 Filtros de Búsqueda</h3>
+
+                    <div class="form-group">
+                        <label for="semestre">Semestre</label>
+                        <select name="semestre" id="semestre">
+                            <option value="">-- Todos los semestres --</option>
+                            <option value="1">1er Semestre</option>
+                            <option value="2">2do Semestre</option>
+                            <option value="3">3er Semestre</option>
+                            <option value="4">4to Semestre</option>
+                            <option value="5">5to Semestre</option>
+                            <option value="6">6to Semestre</option>
+                        </select>
+                        <p class="help-text">Filtra alumnos por semestre específico</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="turno">Turno</label>
+                        <select name="turno" id="turno">
+                            <option value="">-- Todos los turnos --</option>
+                            <option value="Matutino">Matutino</option>
+                            <option value="Vespertino">Vespertino</option>
+                            <option value="Nocturno">Nocturno</option>
+                        </select>
+                        <p class="help-text">Selecciona el turno deseado</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="grupo">Grupo</label>
+                        <input type="text" name="grupo" id="grupo" placeholder="Ej: A, B, C, 1A, 2B">
+                        <p class="help-text">Filtra por grupo específico (opcional)</p>
+                    </div>
+                </div>
+
+                <!-- Formato -->
+                <div class="form-section">
+                    <h3>📄 Formato de Salida</h3>
+                    
+                    <div class="form-group">
+                        <label>Selecciona el formato <span class="required">*</span></label>
+                        <div class="radio-group">
+                            <div class="radio-option">
+                                <input type="radio" name="formato" id="formato_pdf" value="pdf" checked>
+                                <label for="formato_pdf">📄 PDF</label>
+                            </div>
+                            <div class="radio-option">
+                                <input type="radio" name="formato" id="formato_excel" value="excel">
+                                <label for="formato_excel">📊 Excel</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vista Previa -->
+                <div class="preview-section">
+                    <h4>👁️ Vista Previa</h4>
+                    <p id="preview-text">
+                        <strong>Filtros seleccionados:</strong> Todos los alumnos
+                    </p>
+                </div>
+
+                <!-- Botones -->
+                <div class="button-group">
+                    <a href="/reportes" class="btn btn-secondary">← Cancelar</a>
+                    <button type="submit" class="btn btn-primary">🚀 Generar Reporte</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Vista previa dinámica
+        function updatePreview() {
+            const semestre = document.getElementById('semestre').value;
+            const turno = document.getElementById('turno').value;
+            const grupo = document.getElementById('grupo').value;
+            const formato = document.querySelector('input[name="formato"]:checked').value;
+
+            let filtros = [];
+            
+            if (semestre) filtros.push(`Semestre: ${semestre}`);
+            if (turno) filtros.push(`Turno: ${turno}`);
+            if (grupo) filtros.push(`Grupo: ${grupo}`);
+
+            const previewText = document.getElementById('preview-text');
+            
+            if (filtros.length === 0) {
+                previewText.innerHTML = '<strong>Filtros seleccionados:</strong> Todos los alumnos';
+            } else {
+                previewText.innerHTML = `<strong>Filtros seleccionados:</strong> ${filtros.join(', ')}`;
+            }
+
+            previewText.innerHTML += `<br><strong>Formato:</strong> ${formato.toUpperCase()}`;
+        }
+
+        // Event listeners
+        document.getElementById('semestre').addEventListener('change', updatePreview);
+        document.getElementById('turno').addEventListener('change', updatePreview);
+        document.getElementById('grupo').addEventListener('input', updatePreview);
+        document.querySelectorAll('input[name="formato"]').forEach(radio => {
+            radio.addEventListener('change', updatePreview);
+        });
+
+        // Validación antes de enviar
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const semestre = document.getElementById('semestre').value;
+            const turno = document.getElementById('turno').value;
+            const grupo = document.getElementById('grupo').value;
+
+            if (!semestre && !turno && !grupo) {
+                const confirmar = confirm(
+                    '⚠️ No has seleccionado ningún filtro.\n\n' +
+                    'Se generará un reporte con TODOS los alumnos.\n\n' +
+                    '¿Deseas continuar?'
+                );
+                
+                if (!confirmar) {
+                    e.preventDefault();
+                }
+            }
+        });
+    </script>
+</body>
+</html>

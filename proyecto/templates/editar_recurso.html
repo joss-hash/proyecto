@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+
+<link rel="stylesheet" href="/static/recursos.css">
+
+<h1 class="titulo">✏ Editar recurso</h1>
+
+<div class="contenedor">
+  <div class="form-card">
+    <h3>Modificar mensaje</h3>
+
+    <form method="POST">
+      <textarea name="mensaje" required>{{ recurso.mensaje }}</textarea>
+      <br>
+      <button class="btn">Guardar cambios</button>
+    </form>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Recuperar Cuenta</title>
+    <link rel="stylesheet" href="/static/archivo.css">
+</head>
+<body>
+    <div class="contenedor">
+        <h2>Recuperar cuenta</h2>
+        <form method="POST">
+            <label>Usuario:</label>
+            <input type="text" name="usuario" required>
+
+            <label>Nueva contraseña:</label>
+            <input type="password" name="nueva_pass" required>
+
+            <label>Confirmar contraseña:</label>
+            <input type="password" name="confirmar_pass" required>
+
+            <button type="submit">Actualizar</button>
+        </form>
+
+        {% with mensajes = get_flashed_messages(with_categories=true) %}
+          {% if mensajes %}
+            <ul>
+              {% for categoria, mensaje in mensajes %}
+                <li class="{{ categoria }}">{{ mensaje }}</li>
+              {% endfor %}
+            </ul>
+          {% endif %}
+        {% endwith %}
+    </div>
+</body>
+</html>

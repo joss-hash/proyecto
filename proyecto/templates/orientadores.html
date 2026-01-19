@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Orientadores</title>
+    <link rel="stylesheet" href="/static/alumnitos.css">
+    </head>
+    <form method="POST" action="/buscar_orientadores" style="text-align:center; margin:20px;">
+    <input type="text" name="termino" id="termino" placeholder="Buscar orientador..." required
+           style="padding:10px; border:2px solid #2e8b57; border-radius:5px; width:250px;">
+    <button type="submit" style="background:#2e8b57; color:white; padding:10px 15px; border:none; border-radius:5px;">🔍</button>
+    <button type="button" id="microfono" style="background:#28a745; color:white; border:none; border-radius:50%; padding:10px;">🎤</button>
+</form>
+
+<script>
+    const micBtn = document.getElementById('microfono');
+    const input = document.getElementById('termino');
+
+    micBtn.addEventListener('click', () => {
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.lang = 'es-ES';
+        recognition.start();
+        recognition.onresult = (event) => {
+            input.value = event.results[0][0].transcript;
+        };
+    });
+</script>
+    <body>
+        <form method="post" >
+            <h1>Orientadores</h1>
+            <label for="no_empleado">numero de empleado:</label>
+            <input type="text" id="no_empleado" name="no_empleado" required><br><br>
+
+            <label for="nombre">Nombre:</label>
+            <input type="text" id="nombre" name="nombre" required><br><br>
+
+            <label for="apellido_paterno">Apellido paterno:</label>
+            <input type="text" id="apellido_paterno" name="apellido_paterno" required><br><br>
+
+            <label for="apellido_materno">Apellido materno</label>
+            <input type="text" id="apellido_materno" name="apellido_materno" required><br><br>
+
+            <label for="area_desarrolla">area que desarrolla:</label>
+            <input type="text" id="area_desarrolla" name="area_desarrolla" required><br><br>
+
+            <button type="submit">Guardar</button>
+
+        </form>
+        <a href="{{ url_for('dash_orientadores')}}">
+        <button type="submit" class="btn">regresar</button>
+        </a>
+        {% if orientadores %}
+        <table border="1">
+            <tr>
+                <th>no_empleado</th>
+                <th>nombre</th>
+                <th>apellido_paterno</th>
+                <th>apellido_materno</th>
+                <th>area_desarrolla</th>
+                <th>comandos</th>
+            </tr>
+            {% for fila in orientadores %}
+            <tr>
+                <td>{{ fila.no_empleado }}</td>
+                <td>{{ fila.nombre }}</td>
+                <td>{{ fila.apellido_paterno }}</td>
+                <td>{{ fila.apellido_materno }}</td>
+                <td>{{ fila.area_desarrolla}}</td>
+                <td class="acciones">
+                    <form action="{{ url_for('editar_orientadores', no_empleado=fila.no_empleado) }}" method="get" style="display: inline;">
+                        <button type="submit" class="btn-editar">Editar</button>
+                    </form>
+                    <form action="{{ url_for('eliminar_orientadores', no_empleado=fila.no_empleado) }}" method="post" style="display: inline;">
+                        <button type="submit" class="btn-eliminar" onclick="return confirm('¿Seguro que deseas eliminar este registro?');">Eliminar</button>
+                    </form>
+                </td>
+            </tr>
+             {% endfor %}
+        </table> 
+         {% endif %}
+    </body>
+</html>

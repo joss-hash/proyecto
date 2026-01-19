@@ -1,0 +1,248 @@
+        .nivel-riesgo {
+            padding: 30px;
+            border-radius: 16px;
+            margin-bottom: 30px;
+            text-align: center;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+
+        .nivel-riesgo.success {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            color: white;
+        }
+
+        .nivel-riesgo.info {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+        }
+
+        .nivel-riesgo.warning {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            color: white;
+        }
+
+        .nivel-riesgo.danger {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.03); box-shadow: 0 12px 30px rgba(231, 76, 60, 0.4); }
+        }
+
+        .nivel-riesgo h2 {
+            font-size: 48px;
+            margin: 0;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        .nivel-riesgo p {
+            font-size: 18px;
+            margin: 10px 0 0 0;
+            opacity: 0.95;
+        }
+
+        .info-alumno {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .info-alumno h3 {
+            color: #1e8449;
+            margin-bottom: 15px;
+        }
+
+        .info-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+
+        .info-item {
+            background: #f8fefb;
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 3px solid #2ecc71;
+        }
+
+        .info-item label {
+            font-size: 12px;
+            color: #7f8c8d;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .info-item strong {
+            font-size: 16px;
+            color: #2c3e50;
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 40px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(to bottom, #2ecc71, #e74c3c);
+        }
+
+        .timeline-item {
+            position: relative;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: all 0.3s;
+        }
+
+        .timeline-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -33px;
+            top: 25px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: white;
+            border: 3px solid #2ecc71;
+            box-shadow: 0 0 0 4px white;
+        }
+
+        .timeline-item.grave::before {
+            border-color: #e74c3c;
+        }
+
+        .timeline-item.moderada::before {
+            border-color: #f39c12;
+        }
+
+        .timeline-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #ecf0f1;
+        }
+
+        .timeline-date {
+            font-size: 13px;
+            color: #95a5a6;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-leve { background: #3498db; color: white; }
+        .badge-moderada { background: #f39c12; color: white; }
+        .badge-grave { background: #e67e22; color: white; }
+        .badge-muy-grave { background: #e74c3c; color: white; }
+        
+        .badge-activo { background: #e74c3c; color: white; }
+        .badge-resuelto { background: #2ecc71; color: white; }
+        .badge-en-proceso { background: #f39c12; color: white; }
+
+        .no-reportes {
+            background: linear-gradient(135deg, #e8f8f0, #d5f4e6);
+            padding: 60px 40px;
+            border-radius: 16px;
+            text-align: center;
+            border: 2px dashed #2ecc71;
+        }
+
+        .no-reportes h3 {
+            color: #1e8449;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .no-reportes p {
+            color: #5a6c7d;
+            font-size: 16px;
+        }
+
+        .consejos {
+            background: linear-gradient(135deg, #fff9e6, #fff3cd);
+            padding: 25px;
+            border-radius: 12px;
+            margin-top: 30px;
+            border-left: 4px solid #f39c12;
+        }
+
+        .consejos h4 {
+            color: #856404;
+            margin-bottom: 15px;
+        }
+
+        .consejos ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .consejos ul li {
+            padding: 8px 0;
+            color: #856404;
+            padding-left: 25px;
+            position: relative;
+        }
+
+        .consejos ul li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: #f39c12;
+            font-weight: bold;
+        }
+
+        .estadisticas-personales {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 30px 0;
+        }
+
+        .stat-box {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .stat-box h4 {
+            font-size: 32px;
+            margin: 10px 0;
+        }
+
+        .stat-box.success h4 { color: #2ecc71; }
+        .stat-box.warning h4 { color: #f39c12; }
+        .stat-box.danger h4 { color: #e74c3c; }
+
+        .stat-box p {
+            font-size: 13px;
+            color: #7f8c8d;
+            margin: 0;
+        }

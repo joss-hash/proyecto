@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Reportes Disciplinarios</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='mis_reportes.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h2>📋 Mis Reportes Disciplinarios</h2>
+
+        <!-- Nivel de Riesgo -->
+        <div class="nivel-riesgo {{ color_riesgo }}">
+            <h2>
+                {% if nivel_riesgo == 'CRÍTICO - Riesgo de Expulsión' %}
+                    🚨 {{ total_activos }}
+                {% elif nivel_riesgo == 'Alto' %}
+                    ⚠️ {{ total_activos }}
+                {% elif nivel_riesgo == 'Moderado' %}
+                    ⚡ {{ total_activos }}
+                {% else %}
+                    ✅ {{ total_activos }}
+                {% endif %}
+            </h2>
+            <p>{{ nivel_riesgo }}</p>
+            {% if total_activos >= 3 %}
+            <p style="font-size: 14px; margin-top: 15px; font-weight: 600;">
+                ATENCIÓN: Has alcanzado el límite de reportes. Estás en riesgo de expulsión.
+            </p>
+            {% endif %}
+        </div>
+
+        <!-- Información del Alumno -->
+        <div class="info-alumno">
+            <h3>👤 Información Personal</h3>
+            <div class="info-row">
+                <div class="info-item">
+                    <label>Nombre Completo</label>
+                    <strong>{{ alumno.Nombre }} {{ alumno.Paterno }} {{ alumno.Materno }}</strong>
+                </div>
+                <div class="info-item">
+                    <label>No. Control</label>
+                    <strong>{{ alumno.NumeroControl }}</strong>
+                </div>
+                <div class="info-item">
+                    <label>Grupo</label>
+                    <strong>{{ alumno.Grupo }}</strong>
+                </div>
+                <div class="info-item">
+                    <label>Semestre</label>
+                    <strong>{{ alumno.Semestre }}</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- Estadísticas Personales -->
+        <div class="estadisticas-personales">
+            <div class="stat-box">
+                <p>Total de Reportes</p>
+                <h4>{{ reportes|length }}</h4>
+            </div>
+            <div class="stat-box danger">
+                <p>Reportes Activos</p>
+                <h4>{{ total_activos }}</h4>
+            </div>
+            <div class="stat-box success">
+                <p>Reportes Resueltos</p>
+                <h4>{{ reportes|selectattr('estado', 'equalto', 'Resuelto')|list|length }}</h4>
+            </div>
+            <div class="stat-box warning">
+                <p>En Proceso</p>
+                <h4>{{ reportes|selectattr('estado', 'equalto', 'En Proceso')|list|length }}</h4>
+            </div>
+        </div>
+
+        <!-- Timeline de Reportes -->
+        {% if reportes %}
+        <h3 style="color: #1e8449; margin-bottom: 20px;">📅 Historial de Reportes</h3>
+        <div class="timeline">
+            {% for reporte in reportes %}
+            <div class="timeline-item {% if reporte.tipo_falta in ['Grave', 'Muy Grave'] %}grave{% elif reporte.tipo_falta == 'Moderada' %}moderada{% endif %}">
+                <div class="timeline-header">
+                    <div>
+                        <span class="badge badge-{{ reporte.tipo_falta|lower|replace(' ', '-') }}">
+                            {{ reporte.tipo_falta }}
+                        </span>
+                        <span class="badge badge-{{ reporte.estado|lower|replace(' ', '-') }}">
+                            {{ reporte.estado }}
+                        </span>
+                    </div>
+                    <div class="timeline-date">
+                        {{ reporte.fecha_reporte.strftime('%d/%m/%Y %H:%M') }}
+                    </div>
+                </div>
+
+                <p style="font-size: 15px; color: #2c3e50; margin-bottom: 10px; line-height: 1.6;">
+                    <strong>Descripción:</strong> {{ reporte.descripcion }}
+                </p>
+
+                {% if reporte.observaciones %}
+                <p style="font-size: 14px; color: #7f8c8d; margin-bottom: 10px; padding-left: 15px; border-left: 3px solid #ecf0f1;">
+                    <strong>Observaciones:</strong> {{ reporte.observaciones }}
+                </p>
+                {% endif %}
+
+                <p style="font-size: 13px; color: #95a5a6; margin: 0;">
+                    Reportado por: <strong>{{ reporte.docente_reporta }}</strong>
+                </p>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="no-reportes">
+            <h3>🎉 ¡Excelente Comportamiento!</h3>
+            <p>No tienes reportes disciplinarios. ¡Sigue así!</p>
+        </div>
+        {% endif %}
+
+        <!-- Consejos -->
+        {% if total_activos > 0 %}
+        <div class="consejos">
+            <h4>💡 Recomendaciones para Mejorar tu Conducta</h4>
+            <ul>
+                <li>Habla con tu orientador(a) sobre cómo mejorar tu comportamiento</li>
+                <li>Mantén una actitud respetuosa con compañeros y docentes</li>
+                <li>Cumple con las normas del reglamento escolar</li>
+                <li>Participa activamente en actividades escolares positivas</li>
+                <li>Si tienes problemas, busca ayuda antes de que escale</li>
+            </ul>
+        </div>
+        {% endif %}
+
+        <!-- Botón Regresar -->
+        <div style="text-align: center; margin-top: 30px;">
+            <a href="/alumnitos" class="btn">← Regresar a Mi Dashboard</a>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/recursos.css">
+    <title>Ver</title>
+</head>
+<body>
+
+<h1 class="titulo">📚 Recursos escolares</h1>
+
+<div class="contenedor">
+
+{% if session['rol'] != "Alumno" %}
+  <a href="/subir_recurso" class="btn">➕ Subir nuevo recurso</a>
+  <br><br>
+{% endif %}
+
+<div class="grid">
+{% for r in recursos %}
+  <div class="recurso-card">
+    <h4>📄 {{ r.nombre_archivo }}</h4>
+    <p>{{ r.mensaje }}</p>
+    <div class="autor">
+      👤 {{ r.usuario }} | {{ r.rol }} <br>
+      📅 {{ r.fecha }}
+    </div>
+
+    <div class="acciones">
+      <a class="link descargar" href="/descargar/{{ r.id }}">⬇ Descargar</a>
+
+      {% if session['usuario'] == r.usuario %}
+        <a class="link editar" href="/editar_recurso/{{ r.id }}">✏ Editar</a>
+        <a class="link eliminar" href="/eliminar_recurso/{{ r.id }}">🗑 Eliminar</a>
+      {% endif %}
+    </div>
+  </div>
+{% endfor %}
+</div>
+</div>
+</body>
+</html>

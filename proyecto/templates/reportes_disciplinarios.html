@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reportes Disciplinarios</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='disciplinarios.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h2>⚠️ Sistema de Reportes Disciplinarios</h2>
+
+        <!-- Alertas de alumnos en riesgo -->
+        {% if alumnos_en_riesgo %}
+        <div class="alert-danger">
+            <h3>🚨 ALERTA: {{ alumnos_en_riesgo|length }} Alumno(s) en Riesgo de Expulsión</h3>
+            <p>Los siguientes alumnos tienen 3 o más reportes activos:</p>
+            {% for alumno in alumnos_en_riesgo %}
+            <div class="riesgo-card">
+                <strong>{{ alumno.Nombre }} {{ alumno.Paterno }} {{ alumno.Materno }}</strong> 
+                ({{ alumno.NumeroControl }}) - Grupo {{ alumno.Grupo }} - 
+                <span style="color: #c0392b; font-weight: bold;">{{ alumno.total_reportes }} reportes activos</span>
+                <a href="/historial_alumno_pdf/{{ alumno.NumeroControl }}" class="btn btn-small" style="background: white; color: #e74c3c; float: right;">
+                    📄 Ver Historial
+                </a>
+            </div>
+            {% endfor %}
+            <a href="/reporte_alumnos_riesgo_pdf" class="btn" style="background: white; color: #e74c3c; margin-top: 15px;">
+                📥 Descargar Reporte PDF
+            </a>
+        </div>
+        {% endif %}
+
+        <!-- Estadísticas -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <p>Total de Reportes</p>
+                <h3>{{ reportes|length }}</h3>
+            </div>
+            <div class="stat-card">
+                <p>Reportes Activos</p>
+                <h3>{{ reportes|selectattr('estado', 'equalto', 'Activo')|list|length }}</h3>
+            </div>
+            <div class="stat-card danger">
+                <p>Alumnos en Riesgo</p>
+                <h3>{{ alumnos_en_riesgo|length }}</h3>
+            </div>
+        </div>
+
+        <!-- Buscador -->
+        <div class="search-box">
+            <form method="POST" action="/buscar_reportes_alumno">
+                <input type="text" name="termino" placeholder="🔍 Buscar por número de control o nombre del alumno..." required>
+                <button type="submit" class="btn">Buscar</button>
+                {% if termino_busqueda %}
+                <a href="/reportes_disciplinarios" class="btn btn-secondary">Limpiar</a>
+                {% endif %}
+            </form>
+        </div>
+
+        <!-- Botones de acción -->
+        <div style="margin-bottom: 30px;">
+            <a href="/crear_reporte_disciplinario" class="btn" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">
+                ➕ Crear Nuevo Reporte
+            </a>
+            <a href="{% if session.rol == 'Docente' %}/docentes_dash{% elif session.rol == 'Orientador' %}/dash_orientadores{% else %}/dash_directivos{% endif %}" 
+               class="btn btn-secondary">
+                ← Regresar al Dashboard
+            </a>
+        </div>
+
+        <!-- Lista de reportes -->
+        <div class="section-title">📋 Todos los Reportes</div>
+
+        {% if reportes %}
+            {% for reporte in reportes %}
+            <div class="reporte-item {% if reporte.total_reportes >= 3 %}grave{% endif %}">
+                <div class="reporte-header">
+                    <div class="reporte-info">
+                        <h3 style="color: #2c3e50; margin-bottom: 8px;">
+                            {{ reporte.Nombre }} {{ reporte.Paterno }} {{ reporte.Materno }}
+                            {% if reporte.total_reportes >= 3 %}
+                            <span class="badge badge-muy-grave">⚠️ RIESGO DE EXPULSIÓN</span>
+                            {% endif %}
+                        </h3>
+                        <p style="color: #7f8c8d; font-size: 14px;">
+                            No. Control: <strong>{{ reporte.numero_control }}</strong> | 
+                            Grupo: <strong>{{ reporte.Grupo }}</strong> | 
+                            Semestre: <strong>{{ reporte.Semestre }}</strong>
+                        </p>
+                    </div>
+                    <div>
+                        <span class="badge badge-{{ reporte.tipo_falta|lower|replace(' ', '-') }}">
+                            {{ reporte.tipo_falta }}
+                        </span>
+                        <span class="badge badge-{{ reporte.estado|lower|replace(' ', '-') }}">
+                            {{ reporte.estado }}
+                        </span>
+                    </div>
+                </div>
+                
+                <p style="margin-bottom: 10px;"><strong>Descripción:</strong> {{ reporte.descripcion }}</p>
+                
+                {% if reporte.observaciones %}
+                <p style="margin-bottom: 10px; color: #7f8c8d;"><strong>Observaciones:</strong> {{ reporte.observaciones }}</p>
+                {% endif %}
+                
+                <p style="font-size: 13px; color: #95a5a6; margin-bottom: 15px;">
+                    Reportado por: <strong>{{ reporte.docente_reporta }}</strong> el 
+                    {{ reporte.fecha_reporte.strftime('%d/%m/%Y a las %H:%M') }}
+                </p>
+
+                <div class="reporte-actions">
+                    {% if session.rol in ['Orientador', 'Directivo'] %}
+                    <button onclick="abrirModalEstado({{ reporte.id }}, '{{ reporte.estado }}')" 
+                            class="btn btn-small editar">
+                        ✏️ Cambiar Estado
+                    </button>
+                    {% endif %}
+                    
+                    <a href="/historial_alumno_pdf/{{ reporte.numero_control }}" 
+                       class="btn btn-small descargar">
+                        📄 Historial PDF
+                    </a>
+                    
+                    {% if session.rol == 'Directivo' %}
+                    <form method="POST" action="/eliminar_reporte_disciplinario/{{ reporte.id }}" 
+                          style="display: inline;"
+                          onsubmit="return confirm('¿Seguro que deseas eliminar este reporte?');">
+                        <button type="submit" class="btn btn-small eliminar">🗑️ Eliminar</button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p style="text-align: center; color: #7f8c8d; padding: 40px;">
+                {% if termino_busqueda %}
+                    No se encontraron reportes para "{{ termino_busqueda }}"
+                {% else %}
+                    No hay reportes disciplinarios registrados
+                {% endif %}
+            </p>
+        {% endif %}
+    </div>
+
+    <!-- Modal para cambiar estado -->
+    <div id="modalEstado" class="modal">
+        <div class="modal-content">
+            <h3 style="color: #1e8449; margin-bottom: 20px;">Cambiar Estado del Reporte</h3>
+            <form id="formEstado" method="POST">
+                <div class="form-group">
+                    <label for="estado">Nuevo Estado</label>
+                    <select name="estado" id="estado" required>
+                        <option value="Activo">Activo</option>
+                        <option value="En Proceso">En Proceso</option>
+                        <option value="Resuelto">Resuelto</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="observaciones">Observaciones</label>
+                    <textarea name="observaciones" id="observaciones" 
+                              placeholder="Agrega observaciones sobre el cambio de estado..."
+                              style="height: 100px;"></textarea>
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="submit" class="btn">Guardar Cambios</button>
+                    <button type="button" onclick="cerrarModal()" class="btn btn-secondary">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function abrirModalEstado(id, estadoActual) {
+            const modal = document.getElementById('modalEstado');
+            const form = document.getElementById('formEstado');
+            form.action = `/cambiar_estado_reporte/${id}`;
+            document.getElementById('estado').value = estadoActual;
+            modal.classList.add('active');
+        }
+
+        function cerrarModal() {
+            document.getElementById('modalEstado').classList.remove('active');
+        }
+
+        // Cerrar modal al hacer clic fuera
+        window.onclick = function(event) {
+            const modal = document.getElementById('modalEstado');
+            if (event.target === modal) {
+                cerrarModal();
+            }
+        }
+    </script>
+</body>
+</html>

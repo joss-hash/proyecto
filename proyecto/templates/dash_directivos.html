@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard Escolar</title>
+  <link rel="stylesheet" href="/static/dash.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<!-- Modal de Bienvenida -->
+<div class="bienvenida-modal" id="modalBienvenida">
+  <div class="bienvenida-contenido">
+    <div class="icono-usuario">👤</div>
+    <h2>¡Bienvenido/a!</h2>
+    <p id="nombreBienvenida">Cargando...</p>
+    <div class="rol-badge" id="rolBienvenida">Rol</div>
+    <p style="font-size: 14px; color: #95a5a6;">Has iniciado sesión correctamente</p>
+    <button class="cerrar-bienvenida" onclick="cerrarModal()">Continuar</button>
+  </div>
+</div>
+
+<script>
+    let tiempoMaximo = 120;
+    let tiempoRestante = tiempoMaximo;
+    let intervalo = null;
+
+    function actualizarContador() {
+        const contador = document.getElementById("contador");
+        let min = Math.floor(tiempoRestante / 60);
+        let seg = tiempoRestante % 60;
+        contador.textContent = `${min}:${seg < 10 ? '0' : ''}${seg}`;
+    }
+
+    function iniciarTemporizador() {
+        if (intervalo) return;
+
+        intervalo = setInterval(() => {
+            tiempoRestante--;
+            actualizarContador();
+
+            if (tiempoRestante < 0) {
+                clearInterval(intervalo);
+                alert("⏰ Sesión expirada.");
+                window.location.href = "/logout";
+            }
+        }, 1000);
+    }
+
+    function reiniciarTemporizador() {
+        tiempoRestante = tiempoMaximo;
+        actualizarContador();
+    }
+
+    // Función para cerrar el modal
+    function cerrarModal() {
+        document.getElementById("modalBienvenida").style.display = "none";
+    }
+
+    // Detecta actividad del usuario
+    document.addEventListener("mousemove", reiniciarTemporizador);
+    document.addEventListener("keydown", reiniciarTemporizador);
+    document.addEventListener("click", reiniciarTemporizador);
+
+    window.onload = () => {
+        actualizarContador();
+        iniciarTemporizador();
+        
+        // Mostrar información del usuario en el modal
+        const usuario = "{{ session.get('usuario', 'Usuario') }}";
+        const rol = "{{ session.get('rol', 'Rol') }}";
+        
+        document.getElementById("nombreBienvenida").textContent = usuario;
+        document.getElementById("rolBienvenida").textContent = rol;
+        
+        // También actualizar la sidebar
+        document.getElementById("nombreUsuario").textContent = usuario;
+        document.getElementById("rolUsuario").textContent = rol;
+
+        // Cerrar automáticamente después de 3 segundos
+        setTimeout(() => {
+            cerrarModal();
+        }, 3000);
+    };
+</script>
+
+<div class="temporizador">
+    ⏳ Tu sesión expira en <span id="contador">2:00</span>
+</div>
+
+<div class="container">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="profile">
+      <div class="avatar"></div>
+      <h2 id="nombreUsuario">Usuario</h2>
+      <p id="rolUsuario">Rol</p>
+    </div>
+
+    <nav>
+      <a href="{{ url_for('subir_recurso')}}">🏠 Subir Recursos</a>
+      <a href="alumnos">📁 Alumnos</a>
+      <a href="docentes">📁 Docentes</a>
+      <a href="orientadores">📁 Orientadores</a>
+      <a href="directivos">📁 Directivos</a>
+      <a href="{{ url_for('recursos')}}">💬 Ver Recursos</a>
+      <a href="/reportes">📊 Generar Reportes</a>
+      <a href="{{ url_for('login')}}">Cerrar sesion</a>
+    </nav>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <h1>Dashboard</h1>
+
+    <!-- CARDS -->
+    <section class="cards">
+    <div class="card">👨‍🎓 Alumnos<br><span>{{ alumnos }}</span></div>
+    <div class="card">👨‍🏫 Docentes<br><span>{{ docentes }}</span></div>
+    <div class="card">🧭 Orientadores<br><span>{{ orientadores }}</span></div>
+    <div class="card">🏫 Directivos<br><span>{{ directivos }}</span></div>
+    </section>
+
+    <!-- CHARTS -->
+      <section class="charts">
+      <div class="chart-box">
+      <canvas id="graficaRoles"></canvas>
+      </div>
+      <div class="chart-box">📈 Asistencias mensuales</div>
+      <div class="chart-box">🗂 Actividades recientes</div>
+    </section>
+<canvas id="graficaRoles"></canvas>
+
+<script>
+const alumnos = Number("{{ alumnos }}");
+const docentes = Number("{{ docentes }}");
+const orientadores = Number("{{ orientadores }}");
+const directivos = Number("{{ directivos }}");
+
+const data = {
+  labels: ["Alumnos", "Docentes", "Orientadores", "Directivos"],
+  datasets: [{
+    data: [alumnos, docentes, orientadores, directivos]
+  }]
+};
+
+const config = {
+  type: 'pie',
+  data: data
+};
+
+new Chart(
+  document.getElementById('graficaRoles'),
+  config
+);
+</script>
+
+
+  </main>
+</div>
+
+</body>
+</html>

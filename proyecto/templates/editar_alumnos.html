@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Editar alumnos</title>
+    <link rel="stylesheet" href="/static/alumnitos.css">
+</head>
+<body>
+    <h1>Editar alumnos</h1>
+    <form method="post">
+        <label for="NumeroControl">no.control:</label>
+        <input type="text" id="NumeroControl" name="NumeroControl" value="{{ alumnos.NumeroControl }}" required><br><br>
+
+        <label for="Curp">Curp:</label>
+        <input type="text" id="Curp" name="Curp" value="{{ alumnos.Curp }}" required><br><br>
+
+        <label for="Nombre">Nombre:</label>
+        <input type="text" id="Nombre" name="Nombre" value="{{ alumnos.Nombre }}" required><br><br>
+
+        <label for="Paterno">apellido paterno:</label>
+        <input type="text" id="Paterno" name="Paterno" value="{{ alumnos.Paterno }}" required><br><br>
+
+        <label for="Materno">apellido materno:</label>
+        <input type="text" id="Materno" name="Materno" value="{{ alumnos.Materno }}" required><br><br>
+
+        <label for="Turno">turno:</label>
+        <input type="text" id="Turno" name="Turno" value="{{ alumnos.Turno }}" required><br><br>
+
+        <label for="Grupo">grupo:</label>
+        <input type="text" id="Grupo" name="Grupo" value="{{ alumnos.Grupo }}" required><br><br>
+
+        <label for="Semestre">Semestre:</label>
+        <input type="text" id="Semestre" name="Semestre" value="{{ alumnos.Semestre }}" required><br><br>
+
+        <button type="submit">Actualizar</button>
+    </form>
+    <a href="/alumnos.html">Volver</a>
+</body>
+</html>

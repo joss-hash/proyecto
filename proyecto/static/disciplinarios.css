@@ -1,0 +1,234 @@
+/* ===== RESET ===== */
+* {
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+}
+
+body {
+    margin: 0;
+    background: linear-gradient(135deg, #e8f5e9, #f1f8f5);
+    min-height: 100vh;
+}
+
+/* ===== CONTENEDOR ===== */
+.container {
+    max-width: 1200px;
+    margin: auto;
+    padding: 30px 20px 60px;
+}
+
+h2 {
+    text-align: center;
+    color: #1b5e20;
+    margin-bottom: 30px;
+    font-size: 28px;
+}
+
+/* ===== ALERTA ===== */
+.alert-danger {
+    background: linear-gradient(135deg, #ffebee, #fdecea);
+    border-left: 6px solid #c62828;
+    padding: 20px;
+    border-radius: 14px;
+    box-shadow: 0 10px 25px rgba(0,0,0,.08);
+    margin-bottom: 35px;
+}
+
+.riesgo-card {
+    background: white;
+    padding: 12px 15px;
+    border-radius: 10px;
+    margin: 10px 0;
+    box-shadow: 0 4px 10px rgba(0,0,0,.08);
+}
+
+/* ===== ESTADÍSTICAS ===== */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 18px;
+    padding: 22px;
+    text-align: center;
+    box-shadow: 0 10px 25px rgba(0,0,0,.08);
+    border-top: 5px solid #2e7d32;
+}
+
+.stat-card h3 {
+    margin: 5px 0 0;
+    font-size: 32px;
+    color: #1b5e20;
+}
+
+.stat-card p {
+    margin: 0;
+    color: #7f8c8d;
+}
+
+.stat-card.danger {
+    border-top: 5px solid #c62828;
+}
+
+/* ===== BUSCADOR ===== */
+.search-box {
+    background: white;
+    padding: 20px;
+    border-radius: 16px;
+    margin-bottom: 30px;
+    box-shadow: 0 8px 20px rgba(0,0,0,.08);
+}
+
+.search-box form {
+    display: flex;
+    gap: 10px;
+}
+
+.search-box input {
+    flex: 1;
+    padding: 12px 15px;
+    border-radius: 10px;
+    border: 1px solid #c8e6c9;
+    outline: none;
+}
+
+/* ===== BOTONES ===== */
+.btn {
+    background: linear-gradient(135deg, #2e7d32, #43a047);
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: .3s;
+    box-shadow: 0 6px 15px rgba(0,0,0,.15);
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0,0,0,.2);
+}
+
+.btn-secondary {
+    background: #ecf0f1;
+    color: #2c3e50;
+}
+
+.btn-small {
+    padding: 8px 14px;
+    font-size: 13px;
+}
+
+.editar { background: linear-gradient(135deg, #1e88e5, #42a5f5); }
+.descargar { background: linear-gradient(135deg, #2e7d32, #66bb6a); }
+.eliminar { background: linear-gradient(135deg, #c62828, #e53935); }
+
+/* ===== SECCIÓN ===== */
+.section-title {
+    font-size: 20px;
+    font-weight: 700;
+    margin: 30px 0 20px;
+    color: #1b5e20;
+}
+
+/* ===== TARJETA REPORTE ===== */
+.reporte-item {
+    background: white;
+    padding: 22px;
+    border-radius: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 12px 30px rgba(0,0,0,.08);
+    border-left: 6px solid #2e7d32;
+}
+
+.reporte-item.grave {
+    border-left: 6px solid #c62828;
+    background: linear-gradient(135deg, #fff, #ffebee);
+}
+
+.reporte-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    margin-bottom: 15px;
+}
+
+/* ===== BADGES ===== */
+.badge {
+    padding: 6px 12px;
+    border-radius: 30px;
+    font-size: 12px;
+    font-weight: bold;
+    color: white;
+    margin-left: 5px;
+    display: inline-block;
+}
+
+.badge-leve { background: #2e7d32; }
+.badge-moderada { background: #f9a825; }
+.badge-grave { background: #ef6c00; }
+.badge-muy-grave { background: #c62828; }
+
+.badge-activo { background: #2e7d32; }
+.badge-en-proceso { background: #1e88e5; }
+.badge-resuelto { background: #6c757d; }
+
+/* ===== ACCIONES ===== */
+.reporte-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* ===== MODAL ===== */
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: .3s;
+    z-index: 999;
+}
+
+.modal.active {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.modal-content {
+    background: white;
+    padding: 30px;
+    border-radius: 20px;
+    width: 100%;
+    max-width: 500px;
+    box-shadow: 0 20px 50px rgba(0,0,0,.3);
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.form-group select,
+.form-group textarea {
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid #c8e6c9;
+    outline: none;
+}

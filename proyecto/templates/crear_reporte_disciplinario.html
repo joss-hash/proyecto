@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crear Reporte Disciplinario</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='crear.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h2>➕ Crear Nuevo Reporte Disciplinario</h2>
+
+        <form method="POST" action="/crear_reporte_disciplinario">
+            <div class="form-group">
+                <label for="numero_control">Alumno <span style="color: #e74c3c;">*</span></label>
+                <select name="numero_control" id="numero_control" required>
+                    <option value="">-- Selecciona un alumno --</option>
+                    {% for alumno in alumnos %}
+                    <option value="{{ alumno.NumeroControl }}">
+                        {{ alumno.NumeroControl }} - {{ alumno.Nombre }} {{ alumno.Paterno }} {{ alumno.Materno }} 
+                        (Grupo {{ alumno.Grupo }})
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="tipo_falta">Tipo de Falta <span style="color: #e74c3c;">*</span></label>
+                <select name="tipo_falta" id="tipo_falta" required>
+                    <option value="">-- Selecciona el tipo de falta --</option>
+                    <option value="Leve">Leve (Retardos, olvido de material)</option>
+                    <option value="Moderada">Moderada (Falta de respeto, incumplimiento de tareas)</option>
+                    <option value="Grave">Grave (Agresión verbal, daño a instalaciones)</option>
+                    <option value="Muy Grave">Muy Grave (Agresión física, fraude, robo)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="descripcion">Descripción de la Falta <span style="color: #e74c3c;">*</span></label>
+                <textarea name="descripcion" id="descripcion" 
+                          placeholder="Describe detalladamente lo ocurrido..." 
+                          required style="height: 150px;"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="observaciones">Observaciones Adicionales</label>
+                <textarea name="observaciones" id="observaciones" 
+                          placeholder="Información adicional, testigos, acciones tomadas..." 
+                          style="height: 100px;"></textarea>
+            </div>
+
+            <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #f39c12;">
+                <p style="margin: 0; font-size: 14px; color: #856404;">
+                    <strong>⚠️ Importante:</strong> Los alumnos con 3 o más reportes activos están en riesgo de expulsión. 
+                    Asegúrate de documentar correctamente cada incidente.
+                </p>
+            </div>
+
+            <div style="display: flex; gap: 10px;">
+                <button type="submit" class="btn">💾 Crear Reporte</button>
+                <a href="/reportes_disciplinarios" class="btn btn-secondary">← Cancelar</a>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        // Autocompletado de búsqueda de alumnos
+        const select = document.getElementById('numero_control');
+        select.addEventListener('change', function() {
+            if (this.value) {
+                const option = this.options[this.selectedIndex].text;
+                console.log('Alumno seleccionado:', option);
+            }
+        });
+
+        // Validación al enviar
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const tipoFalta = document.getElementById('tipo_falta').value;
+            
+            if (tipoFalta === 'Muy Grave' || tipoFalta === 'Grave') {
+                const confirmar = confirm(
+                    `⚠️ Estás a punto de crear un reporte de tipo "${tipoFalta}".\n\n` +
+                    `Esto tendrá consecuencias serias para el alumno.\n\n` +
+                    `¿Estás seguro de continuar?`
+                );
+                
+                if (!confirmar) {
+                    e.preventDefault();
+                }
+            }
+        });
+    </script>
+</body>
+</html>

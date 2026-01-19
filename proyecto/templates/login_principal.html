@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Login Seguro</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='login.css') }}">
+</head>
+<body>
+<div class="fondo-animado"></div>
+
+<div class="login-container">
+    <h2>login principal</h2>
+    <h2>escolar cecytem📚</h2>
+
+    <form method="POST" >
+        <input type="text" name="usuario" placeholder="Usuario" >
+        <input type="password" name="password" placeholder="Contraseña" >
+        <a href="{{ url_for('login')}}">
+        <button type="submit" class="btn">Entrar</button>
+        </a>
+        <a href="{{ url_for('recuperar')}}">
+        <button type="submit" class="btn">recuperar cuenta</button>
+        </a>
+        <h5>ingrese sus datos para continuar</h5>
+    </form>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="mensajes">
+        {% for category, message in messages %}
+            <p class="{{ category }}">{{ message }}</p>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+</div>
+</body>
+</html>
