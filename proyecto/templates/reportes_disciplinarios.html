@@ -173,26 +173,62 @@
         </div>
     </div>
 
-    <script>
-        function abrirModalEstado(id, estadoActual) {
-            const modal = document.getElementById('modalEstado');
-            const form = document.getElementById('formEstado');
-            form.action = `/cambiar_estado_reporte/${id}`;
-            document.getElementById('estado').value = estadoActual;
-            modal.classList.add('active');
-        }
 
-        function cerrarModal() {
-            document.getElementById('modalEstado').classList.remove('active');
-        }
+<script>
+    function abrirModalEstado(id, estadoActual) {
+        const modal = document.getElementById('modalEstado');
+        const form = document.getElementById('formEstado');
+        const estadoSelect = document.getElementById('estado');
+        const observacionesTextarea = document.getElementById('observaciones');
+        
+        // Configurar la acción del formulario
+        form.action = `/cambiar_estado_reporte/${id}`;
+        
+        // Establecer el estado actual
+        estadoSelect.value = estadoActual;
+        
+        // Limpiar observaciones
+        observacionesTextarea.value = '';
+        
+        // Mostrar el modal
+        modal.classList.add('active');
+        
+        console.log('Modal abierto para reporte ID:', id, 'Estado actual:', estadoActual);
+    }
 
-        // Cerrar modal al hacer clic fuera
-        window.onclick = function(event) {
-            const modal = document.getElementById('modalEstado');
-            if (event.target === modal) {
-                cerrarModal();
-            }
+    function cerrarModal() {
+        const modal = document.getElementById('modalEstado');
+        modal.classList.remove('active');
+        
+        // Limpiar el formulario
+        document.getElementById('formEstado').reset();
+    }
+
+    // Cerrar modal con la tecla ESC
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            cerrarModal();
         }
-    </script>
+    });
+
+    // Cerrar modal al hacer clic fuera
+    window.onclick = function(event) {
+        const modal = document.getElementById('modalEstado');
+        if (event.target === modal) {
+            cerrarModal();
+        }
+    }
+
+    // Validar formulario antes de enviar
+    document.getElementById('formEstado').addEventListener('submit', function(e) {
+        const estado = document.getElementById('estado').value;
+        if (!estado) {
+            e.preventDefault();
+            alert('Por favor selecciona un estado');
+            return false;
+        }
+        return true;
+    });
+</script>
 </body>
 </html>

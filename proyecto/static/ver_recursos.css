@@ -88,6 +88,9 @@ textarea {
 }
 
 .recurso-card h4 {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
   color: #1e8449;
   margin-bottom: 10px;
 }
@@ -134,3 +137,5 @@ textarea {
   background: #e74c3c;
   color: white;
 }
+
+

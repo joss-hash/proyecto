@@ -49,6 +49,9 @@ def login_requerido(f):
         return f(*args, **kwargs)
     return decorated_function
 
+# Reemplaza la sección de login en apps.py (desde la línea ~60 hasta ~120)
+# con este código:
+
 @app.route("/", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -87,11 +90,12 @@ def login():
         login_exitoso = False
         
         # 🔎 BUSCAR EN ORIENTADORES
-        cursor.execute("SELECT * FROM orientadoreslog WHERE usuario=%s AND password=%s", (user, password))
+        cursor.execute("SELECT * FROM orientadores WHERE nombre=%s AND no_empleado=%s", (user, password))
         result = cursor.fetchone()
         if result:
             session.permanent = True
             session['usuario'] = user
+            session['nombre_completo'] = f"{result['nombre']} {result['apellido_paterno']} {result['apellido_materno']}"
             session['rol'] = 'Orientador'
             login_exitoso = True
             destino = "/dash_orientadores"
@@ -99,11 +103,12 @@ def login():
 
         # 🔎 BUSCAR EN DIRECTIVOS
         if not login_exitoso:
-            cursor.execute("SELECT * FROM directivoslog WHERE usuario=%s AND password=%s", (user, password))
+            cursor.execute("SELECT * FROM directivos WHERE nombre=%s AND no_empleado=%s", (user, password))
             result = cursor.fetchone()
             if result:
                 session.permanent = True
                 session['usuario'] = user
+                session['nombre_completo'] = f"{result['nombre']} {result['apellido_paterno']} {result['apellido_materno']}"
                 session['rol'] = 'Directivo'
                 login_exitoso = True
                 destino = "/dash_directivos"
@@ -111,11 +116,12 @@ def login():
 
         # 🔎 BUSCAR EN DOCENTES
         if not login_exitoso:
-            cursor.execute("SELECT * FROM docenteslog WHERE usuario=%s AND password=%s", (user, password))
+            cursor.execute("SELECT * FROM docentes WHERE nombre=%s AND no_empleado=%s", (user, password))
             result = cursor.fetchone()
             if result:
                 session.permanent = True
                 session['usuario'] = user
+                session['nombre_completo'] = f"{result['nombre']} {result['apellido_paterno']} {result['apellido_materno']}"
                 session['rol'] = 'Docente'
                 login_exitoso = True
                 destino = "/docentes_dash"
@@ -123,11 +129,12 @@ def login():
 
         # 🔎 BUSCAR EN ALUMNOS
         if not login_exitoso:
-            cursor.execute("SELECT * FROM alumnoslog WHERE usuario=%s AND password=%s", (user, password))
+            cursor.execute("SELECT * FROM alumnos WHERE nombre=%s AND NumeroControl=%s", (user, password))
             result = cursor.fetchone()
             if result:
                 session.permanent = True
                 session['usuario'] = user
+                session['nombre_completo'] = f"{result['Nombre']} {result['Paterno']} {result['Materno']}"
                 session['rol'] = 'Alumno'
                 login_exitoso = True
                 destino = "/alumnitos"
@@ -141,7 +148,7 @@ def login():
                 del intentos_login[clave_intento]
             
             print(f"✅ Ingreso exitoso: {user} | Rol: {rol}")
-            flash(f"Bienvenido {user} - Rol: {rol}", "success")
+            flash(f"Bienvenido {session.get('nombre_completo', user)} - Rol: {rol}", "success")
             return redirect(destino)
         else:
             # Login fallido: registrar intento
@@ -170,6 +177,21 @@ def login():
                 return redirect(url_for('recuperar'))
 
     return render_template("login_principal.html")
+#--------------------------------Regresar al los dashboard-----------------------------
+@app.route("/volver_dashboard")
+def volver_dashboard():
+    rol = session.get("rol")
+
+    if rol == "Alumno":
+        return redirect("/alumnitos")
+    elif rol == "Docente":
+        return redirect("/docentes_dash")
+    elif rol == "Directivo":
+        return redirect("/dash_directivos")
+    elif rol == "Orientador":
+        return redirect("/dash_orientadores")
+    else:
+        return redirect("/login")
 
 # ------------------- RUTAS PROTEGIDAS -------------------
 
@@ -715,7 +737,7 @@ def editar_recurso(id):
     return render_template('editar_recurso.html', recurso=recurso)
 
    # ============================================
-# SISTEMA DE REPORTES - Agregar al archivo app.py
+# SISTEMA DE REPORTES 
 # ============================================
 
 @app.route('/reportes')
@@ -1285,6 +1307,66 @@ def panel_reportes_disciplinarios():
         alumnos_en_riesgo=alumnos_en_riesgo
     )
 
+#  ruta /cambiar_estado_reporte
+
+@app.route('/cambiar_estado_reporte/<int:id>', methods=['POST'])
+@login_requerido
+def cambiar_estado_reporte(id):
+    """Cambiar el estado de un reporte (solo orientadores y directivos)"""
+    
+    if session['rol'] not in ['Orientador', 'Directivo']:
+        flash("No tienes permisos para cambiar el estado", "error")
+        return redirect('/reportes_disciplinarios')
+    
+    try:
+        nuevo_estado = request.form.get('estado')
+        observaciones = request.form.get('observaciones', '')
+        
+        if not nuevo_estado:
+            flash("Debes seleccionar un estado", "error")
+            return redirect('/reportes_disciplinarios')
+        
+        cursor = db.cursor()
+        
+        # Obtener las observaciones anteriores
+        cursor.execute("SELECT observaciones FROM reportes_disciplinarios WHERE id = %s", (id,))
+        resultado = cursor.fetchone()
+        
+        if not resultado:
+            flash("Reporte no encontrado", "error")
+            cursor.close()
+            return redirect('/reportes_disciplinarios')
+        
+        observaciones_anteriores = resultado[0] if resultado[0] else ""
+        
+        # Agregar nueva observación con fecha y usuario
+        fecha_actual = datetime.now().strftime('%d/%m/%Y %H:%M')
+        nueva_observacion = f"[{fecha_actual} - {session['usuario']}] Estado cambiado a '{nuevo_estado}'. {observaciones}"
+        
+        # Combinar observaciones
+        if observaciones_anteriores:
+            observaciones_completas = f"{observaciones_anteriores}\n\n{nueva_observacion}"
+        else:
+            observaciones_completas = nueva_observacion
+        
+        # Actualizar el reporte
+        cursor.execute("""
+            UPDATE reportes_disciplinarios 
+            SET estado = %s, observaciones = %s 
+            WHERE id = %s
+        """, (nuevo_estado, observaciones_completas, id))
+        
+        db.commit()
+        cursor.close()
+        
+        flash(f"✅ Estado del reporte actualizado a: {nuevo_estado}", "success")
+        
+    except Exception as e:
+        flash(f"Error al actualizar el estado: {str(e)}", "error")
+        print(f"Error en cambiar_estado_reporte: {e}")
+    
+    return redirect('/reportes_disciplinarios')
+
 
 # ============================================
 # RUTA: CREAR NUEVO REPORTE DISCIPLINARIO
@@ -1353,6 +1435,8 @@ def crear_reporte_disciplinario():
 # ============================================
 # RUTA: VER REPORTES DEL ALUMNO (VISTA ALUMNO)
 # ============================================
+# Reemplaza la ruta /mis_reportes en apps.py con este código:
+
 @app.route('/mis_reportes')
 @login_requerido
 def mis_reportes():
@@ -1364,24 +1448,23 @@ def mis_reportes():
     
     cursor = db.cursor(dictionary=True)
     
-    # Obtener el número de control del alumno logueado
-    cursor.execute("SELECT usuario FROM alumnoslog WHERE usuario = %s", (session['usuario'],))
-    alumno_info = cursor.fetchone()
+    # El usuario del alumno es su nombre (como se loguea)
+    nombre_usuario = session['usuario']
     
-    if not alumno_info:
-        flash("No se encontró información del alumno", "error")
-        return redirect('/alumnitos')
-    
-    # El usuario del alumno es su número de control
-    numero_control = session['usuario']
-    
-    # Obtener información básica del alumno
+    # Obtener el número de control del alumno basado en su nombre
     cursor.execute("""
         SELECT NumeroControl, Nombre, Paterno, Materno, Grupo, Semestre 
         FROM alumnos 
-        WHERE NumeroControl = %s
-    """, (numero_control,))
+        WHERE Nombre = %s
+    """, (nombre_usuario,))
     alumno = cursor.fetchone()
+    
+    if not alumno:
+        flash("No se encontró información del alumno", "error")
+        cursor.close()
+        return redirect('/alumnitos')
+    
+    numero_control = alumno['NumeroControl']
     
     # Obtener todos los reportes del alumno
     cursor.execute("""
@@ -1431,33 +1514,6 @@ def mis_reportes():
         nivel_riesgo=nivel_riesgo,
         color_riesgo=color_riesgo
     )
-
-
-# ============================================
-# RUTA: CAMBIAR ESTADO DE REPORTE
-# ============================================
-@app.route('/cambiar_estado_reporte/<int:id>', methods=['POST'])
-@login_requerido
-def cambiar_estado_reporte(id):
-    """Cambiar el estado de un reporte (solo orientadores y directivos)"""
-    
-    if session['rol'] not in ['Orientador', 'Directivo']:
-        return "No autorizado", 403
-    
-    nuevo_estado = request.form['estado']
-    observaciones = request.form.get('observaciones', '')
-    
-    cursor = db.cursor()
-    cursor.execute("""
-        UPDATE reportes_disciplinarios 
-        SET estado = %s, observaciones = %s 
-        WHERE id = %s
-    """, (nuevo_estado, observaciones, id))
-    db.commit()
-    cursor.close()
-    
-    flash(f"Estado del reporte actualizado a: {nuevo_estado}", "success")
-    return redirect('/reportes_disciplinarios')
 
 
 # ============================================

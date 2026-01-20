@@ -19,7 +19,6 @@
     <button class="cerrar-bienvenida" onclick="cerrarModal()">Continuar</button>
   </div>
 </div>
-
 <script>
     let tiempoMaximo = 120;
     let tiempoRestante = tiempoMaximo;
@@ -27,6 +26,8 @@
 
     function actualizarContador() {
         const contador = document.getElementById("contador");
+        if (!contador) return;
+
         let min = Math.floor(tiempoRestante / 60);
         let seg = tiempoRestante % 60;
         contador.textContent = `${min}:${seg < 10 ? '0' : ''}${seg}`;
@@ -39,10 +40,11 @@
             tiempoRestante--;
             actualizarContador();
 
-            if (tiempoRestante < 0) {
+            if (tiempoRestante <= 0) {
                 clearInterval(intervalo);
-                alert("⏰ Sesión expirada.");
-                window.location.href = "/logout";
+                alert("⏰ Sesión expirada por inactividad.");
+                // CORRECCIÓN: Redirigir a la ruta correcta del login
+                window.location.href = "{{ url_for('login') }}";
             }
         }, 1000);
     }
@@ -52,35 +54,44 @@
         actualizarContador();
     }
 
-    // Función para cerrar el modal
     function cerrarModal() {
-        document.getElementById("modalBienvenida").style.display = "none";
+        const modal = document.getElementById("modalBienvenida");
+        if (modal) {
+            modal.style.display = "none";
+        }
     }
 
-    // Detecta actividad del usuario
+    // Detectar actividad del usuario
     document.addEventListener("mousemove", reiniciarTemporizador);
     document.addEventListener("keydown", reiniciarTemporizador);
     document.addEventListener("click", reiniciarTemporizador);
+    document.addEventListener("scroll", reiniciarTemporizador);
+    document.addEventListener("touchstart", reiniciarTemporizador);
 
     window.onload = () => {
         actualizarContador();
         iniciarTemporizador();
-        
-        // Mostrar información del usuario en el modal
-        const usuario = "{{ session.get('usuario', 'Usuario') }}";
-        const rol = "{{ session.get('rol', 'Rol') }}";
-        
-        document.getElementById("nombreBienvenida").textContent = usuario;
-        document.getElementById("rolBienvenida").textContent = rol;
-        
-        // También actualizar la sidebar
-        document.getElementById("nombreUsuario").textContent = usuario;
-        document.getElementById("rolUsuario").textContent = rol;
 
-        // Cerrar automáticamente después de 3 segundos
-        setTimeout(() => {
-            cerrarModal();
-        }, 3000);
+        // Obtener información del usuario desde la sesión
+        const nombreCompleto = "{{ session.get('nombre_completo', session.get('usuario', 'Usuario')) }}";
+        const rol = "{{ session.get('rol', 'Rol') }}";
+
+        // Actualizar modal de bienvenida
+        const nombreBienvenida = document.getElementById("nombreBienvenida");
+        const rolBienvenida = document.getElementById("rolBienvenida");
+        
+        if (nombreBienvenida) nombreBienvenida.textContent = nombreCompleto;
+        if (rolBienvenida) rolBienvenida.textContent = rol;
+
+        // Actualizar sidebar
+        const nombreUsuario = document.getElementById("nombreUsuario");
+        const rolUsuario = document.getElementById("rolUsuario");
+        
+        if (nombreUsuario) nombreUsuario.textContent = nombreCompleto;
+        if (rolUsuario) rolUsuario.textContent = rol;
+
+        // Cerrar modal automáticamente después de 3 segundos
+        setTimeout(cerrarModal, 3000);
     };
 </script>
 
@@ -106,6 +117,7 @@
       <a href="directivos">📁 Directivos</a>
       <a href="{{ url_for('recursos')}}">💬 Ver Recursos</a>
       <a href="/reportes">📊 Generar Reportes</a>
+      <a href="/reportes_disciplinarios" >⚠️ Reportes Disciplinarios</a>
       <a href="{{ url_for('login')}}">Cerrar sesion</a>
     </nav>
   </aside>

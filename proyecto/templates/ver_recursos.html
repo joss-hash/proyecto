@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/static/recursos.css">
+    <link rel="stylesheet" href="/static/ver_recursos.css">
     <title>Ver</title>
 </head>
 <body>
@@ -11,6 +11,7 @@
 <h1 class="titulo">📚 Recursos escolares</h1>
 
 <div class="contenedor">
+  <a href="/volver_dashboard" class="btn regresar">⬅ Volver</a>
 
 {% if session['rol'] != "Alumno" %}
   <a href="/subir_recurso" class="btn">➕ Subir nuevo recurso</a>
@@ -26,7 +27,6 @@
       👤 {{ r.usuario }} | {{ r.rol }} <br>
       📅 {{ r.fecha }}
     </div>
-
     <div class="acciones">
       <a class="link descargar" href="/descargar/{{ r.id }}">⬇ Descargar</a>
 
