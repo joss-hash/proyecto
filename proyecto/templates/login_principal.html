@@ -2,27 +2,36 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Login Seguro</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='login.css') }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/login.css">
+    <title>Login Seguro - CECYTEM</title>
 </head>
 <body>
 <div class="fondo-animado"></div>
-
 <div class="login-container">
-    <h2>login principal</h2>
-    <h2>escolar cecytem📚</h2>
-
-    <form method="POST" >
-        <input type="text" name="usuario" placeholder="Usuario" >
-        <input type="password" name="password" placeholder="Contraseña" >
-        <a href="{{ url_for('login')}}">
-        <button type="submit" class="btn">Entrar</button>
-        </a>
-        <a href="{{ url_for('recuperar')}}">
-        <button type="submit" class="btn">recuperar cuenta</button>
-        </a>
-        <h5>ingrese sus datos para continuar</h5>
+    <div class="logo-container">
+        <div class="logo-icon">📚</div>
+    </div>
+    <h2>Sistema Escolar</h2>
+    <h2>CECYTEM</h2>
+    <p class="subtitle">Acceso seguro al portal educativo</p>
+    
+    <form method="POST" action="{{ url_for('login') }}">
+        <div class="input-group">
+            <input type="text" name="usuario" placeholder="Usuario" required autocomplete="username" maxlength="50">
+        </div>
+        
+        <div class="input-group">
+            <input type="password" name="password" placeholder="Contraseña" required autocomplete="current-password" maxlength="100">
+        </div>
+        
+        <button type="submit" class="btn btn-primary">Iniciar Sesión</button>
+        <button type="button" class="btn btn-secondary" onclick="window.location.href='{{ url_for('recuperar') }}'">Recuperar Cuenta</button>
+        
+        <p class="helper-text">Ingrese sus credenciales para continuar</p>
+        
     </form>
+    
     {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
     <div class="mensajes">
@@ -33,5 +42,32 @@
     {% endif %}
     {% endwith %}
 </div>
+
+<script>
+    // Prevenir múltiples envíos del formulario
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const submitBtn = this.querySelector('.btn-primary');
+        if (submitBtn.disabled) {
+            e.preventDefault();
+            return false;
+        }
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Verificando...';
+        setTimeout(() => {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Iniciar Sesión';
+        }, 3000);
+    });
+
+    // Auto-limpiar mensajes después de 8 segundos
+    const mensajes = document.querySelector('.mensajes');
+    if (mensajes) {
+        setTimeout(() => {
+            mensajes.style.animation = 'fadeOut 0.5s ease';
+            mensajes.style.opacity = '0';
+            setTimeout(() => mensajes.remove(), 500);
+        }, 8000);
+    }
+</script>
 </body>
 </html>

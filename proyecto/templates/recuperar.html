@@ -2,34 +2,166 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Recuperar Cuenta</title>
-    <link rel="stylesheet" href="/static/archivo.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/recuperar.css">
+    <title>Recuperar Cuenta - CECYTEM</title>
 </head>
 <body>
-    <div class="contenedor">
-        <h2>Recuperar cuenta</h2>
-        <form method="POST">
-            <label>Usuario:</label>
-            <input type="text" name="usuario" required>
-
-            <label>Nueva contraseña:</label>
-            <input type="password" name="nueva_pass" required>
-
-            <label>Confirmar contraseña:</label>
-            <input type="password" name="confirmar_pass" required>
-
-            <button type="submit">Actualizar</button>
-        </form>
-
-        {% with mensajes = get_flashed_messages(with_categories=true) %}
-          {% if mensajes %}
-            <ul>
-              {% for categoria, mensaje in mensajes %}
-                <li class="{{ categoria }}">{{ mensaje }}</li>
-              {% endfor %}
-            </ul>
-          {% endif %}
-        {% endwith %}
+<div class="fondo-animado"></div>
+<div class="recuperar-container">
+    <div class="logo-container">
+        <div class="logo-icon">🔓</div>
     </div>
+    <h2>Recuperar Cuenta</h2>
+    <h2>CECYTEM</h2>
+    <p class="subtitle">Restablece tu contraseña de forma segura</p>
+    
+    <form method="POST" action="{{ url_for('recuperar') }}" id="recuperarForm">
+        <div class="input-group">
+            <label for="rol">Tipo de Usuario</label>
+            <select name="rol" id="rol" required>
+                <option value="">Seleccione su rol</option>
+                <option value="Alumno">Alumno</option>
+                <option value="Docente">Docente</option>
+                <option value="Orientador">Orientador</option>
+                <option value="Directivo">Directivo</option>
+            </select>
+        </div>
+
+        <div class="input-group">
+            <label for="usuario">Usuario</label>
+            <input type="text" name="usuario" id="usuario" placeholder="Ingrese su usuario" required maxlength="50">
+        </div>
+        
+        <div class="input-group">
+            <label for="nueva_pass">Nueva Contraseña</label>
+            <input type="password" name="nueva_pass" id="nueva_pass" placeholder="Mínimo 8 caracteres" required maxlength="100">
+            <div class="password-strength" id="passwordStrength">
+                <div class="password-strength-bar" id="strengthBar"></div>
+            </div>
+        </div>
+
+        <div class="password-requirements">
+            <h4>Requisitos de la contraseña:</h4>
+            <div class="requirement" id="req-length">Mínimo 8 caracteres</div>
+            <div class="requirement" id="req-uppercase">Al menos una mayúscula</div>
+            <div class="requirement" id="req-number">Al menos un número</div>
+        </div>
+        
+        <div class="input-group">
+            <label for="confirmar_pass">Confirmar Nueva Contraseña</label>
+            <input type="password" name="confirmar_pass" id="confirmar_pass" placeholder="Repita la contraseña" required maxlength="100">
+        </div>
+        
+        <button type="submit" class="btn btn-primary" id="submitBtn" disabled>Actualizar Contraseña</button>
+        
+        <div class="back-to-login">
+            <a href="{{ url_for('login') }}">← Volver al inicio de sesión</a>
+        </div>
+    </form>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="mensajes">
+        {% for category, message in messages %}
+            <p class="{{ category }}">{{ message }}</p>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+</div>
+
+<script>
+    const nuevaPass = document.getElementById('nueva_pass');
+    const confirmarPass = document.getElementById('confirmar_pass');
+    const submitBtn = document.getElementById('submitBtn');
+    const strengthBar = document.getElementById('strengthBar');
+    const passwordStrength = document.getElementById('passwordStrength');
+    
+    const reqLength = document.getElementById('req-length');
+    const reqUppercase = document.getElementById('req-uppercase');
+    const reqNumber = document.getElementById('req-number');
+
+    // Validar contraseña en tiempo real
+    nuevaPass.addEventListener('input', function() {
+        const password = this.value;
+        passwordStrength.style.display = password.length > 0 ? 'block' : 'none';
+        
+        // Validar requisitos
+        const hasLength = password.length >= 8;
+        const hasUppercase = /[A-Z]/.test(password);
+        const hasNumber = /[0-9]/.test(password);
+        
+        // Actualizar UI de requisitos
+        reqLength.classList.toggle('valid', hasLength);
+        reqUppercase.classList.toggle('valid', hasUppercase);
+        reqNumber.classList.toggle('valid', hasNumber);
+        
+        // Calcular fuerza
+        let strength = 0;
+        if (hasLength) strength++;
+        if (hasUppercase) strength++;
+        if (hasNumber) strength++;
+        
+        // Actualizar barra de fuerza
+        strengthBar.className = 'password-strength-bar';
+        if (strength === 1) strengthBar.classList.add('strength-weak');
+        else if (strength === 2) strengthBar.classList.add('strength-medium');
+        else if (strength === 3) strengthBar.classList.add('strength-strong');
+        
+        validateForm();
+    });
+
+    // Validar confirmación de contraseña
+    confirmarPass.addEventListener('input', validateForm);
+    document.getElementById('usuario').addEventListener('input', validateForm);
+    document.getElementById('rol').addEventListener('change', validateForm);
+
+    function validateForm() {
+        const password = nuevaPass.value;
+        const confirmPassword = confirmarPass.value;
+        const usuario = document.getElementById('usuario').value;
+        const rol = document.getElementById('rol').value;
+        
+        const hasLength = password.length >= 8;
+        const hasUppercase = /[A-Z]/.test(password);
+        const hasNumber = /[0-9]/.test(password);
+        const passwordsMatch = password === confirmPassword && password.length > 0;
+        
+        const isValid = hasLength && hasUppercase && hasNumber && passwordsMatch && usuario.length > 0 && rol.length > 0;
+        
+        submitBtn.disabled = !isValid;
+    }
+
+    // Prevenir envíos múltiples
+    document.getElementById('recuperarForm').addEventListener('submit', function(e) {
+        if (submitBtn.disabled) {
+            e.preventDefault();
+            return false;
+        }
+        
+        const nuevaPass = document.getElementById('nueva_pass').value;
+        const confirmarPass = document.getElementById('confirmar_pass').value;
+        
+        if (nuevaPass !== confirmarPass) {
+            e.preventDefault();
+            alert('Las contraseñas no coinciden');
+            return false;
+        }
+        
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Actualizando...';
+    });
+
+    // Auto-limpiar mensajes
+    const mensajes = document.querySelector('.mensajes');
+    if (mensajes) {
+        setTimeout(() => {
+            mensajes.style.animation = 'fadeOut 0.5s ease';
+            mensajes.style.opacity = '0';
+            setTimeout(() => mensajes.remove(), 500);
+        }, 8000);
+    }
+</script>
 </body>
 </html>

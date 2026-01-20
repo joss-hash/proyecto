@@ -21,6 +21,12 @@ db = mysql.connector.connect(
     password="",
     database="proyecto"
 )
+# Configuración de intentos de login
+MAX_INTENTOS = 4
+TIEMPO_BLOQUEO_MINUTOS = 15
+
+# Diccionario en memoria para guardar intentos (se reinicia al reiniciar el servidor)
+intentos_login = {}
 
 UPLOAD_FOLDER = 'uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -48,9 +54,38 @@ def login():
     if request.method == "POST":
         user = request.form["usuario"]
         password = request.form["password"]
-
+        ip_address = request.remote_addr
+        
+        # Clave única por usuario + IP
+        clave_intento = f"{user}_{ip_address}"
+        
+        # Verificar si está bloqueado
+        if clave_intento in intentos_login:
+            datos_intento = intentos_login[clave_intento]
+            
+            # Verificar si el bloqueo sigue activo
+            if 'bloqueado_hasta' in datos_intento:
+                tiempo_actual = datetime.now()
+                if tiempo_actual < datos_intento['bloqueado_hasta']:
+                    tiempo_restante = (datos_intento['bloqueado_hasta'] - tiempo_actual).seconds // 60
+                    flash(f"⛔ Cuenta bloqueada por seguridad. Intenta nuevamente en {tiempo_restante} minutos.", "error")
+                    return redirect(url_for('login'))
+                else:
+                    # El bloqueo expiró, eliminar registro
+                    del intentos_login[clave_intento]
+            
+            # Verificar intentos fallidos
+            elif datos_intento.get('intentos', 0) >= MAX_INTENTOS:
+                # Bloquear usuario
+                intentos_login[clave_intento]['bloqueado_hasta'] = datetime.now() + timedelta(minutes=TIEMPO_BLOQUEO_MINUTOS)
+                flash(f"⛔ Demasiados intentos fallidos. Cuenta bloqueada por {TIEMPO_BLOQUEO_MINUTOS} minutos.", "error")
+                
+                # Redirigir a recuperar cuenta después de 4 intentos
+                return redirect(url_for('recuperar'))
+        
         cursor = db.cursor(dictionary=True)
-
+        login_exitoso = False
+        
         # 🔎 BUSCAR EN ORIENTADORES
         cursor.execute("SELECT * FROM orientadoreslog WHERE usuario=%s AND password=%s", (user, password))
         result = cursor.fetchone()
@@ -58,47 +93,81 @@ def login():
             session.permanent = True
             session['usuario'] = user
             session['rol'] = 'Orientador'
-            print(f"✅ Ingreso exitoso: {user} | Rol: Orientador")
-            flash(f"Bienvenido {user} - Rol: Orientador", "success")
-            return redirect("/dash_orientadores")
+            login_exitoso = True
+            destino = "/dash_orientadores"
+            rol = 'Orientador'
 
         # 🔎 BUSCAR EN DIRECTIVOS
-        cursor.execute("SELECT * FROM directivoslog WHERE usuario=%s AND password=%s", (user, password))
-        result = cursor.fetchone()
-        if result:
-            session.permanent = True
-            session['usuario'] = user
-            session['rol'] = 'Directivo'
-            print(f"✅ Ingreso exitoso: {user} | Rol: Directivo")
-            flash(f"Bienvenido {user} - Rol: Directivo", "success")
-            return redirect("/dash_directivos")
+        if not login_exitoso:
+            cursor.execute("SELECT * FROM directivoslog WHERE usuario=%s AND password=%s", (user, password))
+            result = cursor.fetchone()
+            if result:
+                session.permanent = True
+                session['usuario'] = user
+                session['rol'] = 'Directivo'
+                login_exitoso = True
+                destino = "/dash_directivos"
+                rol = 'Directivo'
 
         # 🔎 BUSCAR EN DOCENTES
-        cursor.execute("SELECT * FROM docenteslog WHERE usuario=%s AND password=%s", (user, password))
-        result = cursor.fetchone()
-        if result:
-            session.permanent = True
-            session['usuario'] = user
-            session['rol'] = 'Docente'
-            print(f"✅ Ingreso exitoso: {user} | Rol: Docente")
-            flash(f"Bienvenido {user} - Rol: Docente", "success")
-            return redirect("/docentes_dash")
+        if not login_exitoso:
+            cursor.execute("SELECT * FROM docenteslog WHERE usuario=%s AND password=%s", (user, password))
+            result = cursor.fetchone()
+            if result:
+                session.permanent = True
+                session['usuario'] = user
+                session['rol'] = 'Docente'
+                login_exitoso = True
+                destino = "/docentes_dash"
+                rol = 'Docente'
 
         # 🔎 BUSCAR EN ALUMNOS
-        cursor.execute("SELECT * FROM alumnoslog WHERE usuario=%s AND password=%s", (user, password))
-        result = cursor.fetchone()
-        if result:
-            session.permanent = True
-            session['usuario'] = user
-            session['rol'] = 'Alumno'
-            print(f"✅ Ingreso exitoso: {user} | Rol: Alumno")
-            flash(f"Bienvenido {user} - Rol: Alumno", "success")
-            return redirect("/alumnitos")
+        if not login_exitoso:
+            cursor.execute("SELECT * FROM alumnoslog WHERE usuario=%s AND password=%s", (user, password))
+            result = cursor.fetchone()
+            if result:
+                session.permanent = True
+                session['usuario'] = user
+                session['rol'] = 'Alumno'
+                login_exitoso = True
+                destino = "/alumnitos"
+                rol = 'Alumno'
 
         cursor.close()
-        print(f"❌ Intento fallido de login: {user}")
-        flash("Usuario o contraseña incorrectos ❌", "error")
-        return redirect(url_for('login'))
+        
+        if login_exitoso:
+            # Login exitoso: eliminar intentos fallidos
+            if clave_intento in intentos_login:
+                del intentos_login[clave_intento]
+            
+            print(f"✅ Ingreso exitoso: {user} | Rol: {rol}")
+            flash(f"Bienvenido {user} - Rol: {rol}", "success")
+            return redirect(destino)
+        else:
+            # Login fallido: registrar intento
+            if clave_intento not in intentos_login:
+                intentos_login[clave_intento] = {'intentos': 0, 'primer_intento': datetime.now()}
+            
+            intentos_login[clave_intento]['intentos'] += 1
+            intentos_login[clave_intento]['ultimo_intento'] = datetime.now()
+            
+            intentos_actuales = intentos_login[clave_intento]['intentos']
+            intentos_restantes = MAX_INTENTOS - intentos_actuales
+            
+            print(f"❌ Intento fallido de login: {user} desde IP: {ip_address} - Intento {intentos_actuales}/{MAX_INTENTOS}")
+            
+            if intentos_restantes > 0:
+                flash(f"❌ Usuario o contraseña incorrectos. Te quedan {intentos_restantes} intentos.", "error")
+                return redirect(url_for('login'))
+            else:
+                # Bloquear y redirigir a recuperar
+                intentos_login[clave_intento]['bloqueado_hasta'] = datetime.now() + timedelta(minutes=TIEMPO_BLOQUEO_MINUTOS)
+                flash(f"⛔ Demasiados intentos fallidos. Serás redirigido a recuperación de cuenta.", "error")
+                
+                # Esperar 2 segundos antes de redirigir
+                import time
+                time.sleep(2)
+                return redirect(url_for('recuperar'))
 
     return render_template("login_principal.html")
 
@@ -217,49 +286,6 @@ def dash_orientadores():
         orientadores=total_orientadores,
         directivos=total_directivos
     )
-
-# ------------------- RECUPERAR CONTRASEÑA -------------------
-@app.route("/recuperar", methods=["GET", "POST"])
-def recuperar():
-    if request.method == "POST":
-        usuario = request.form["usuario"]
-        nueva_pass = request.form["nueva_pass"]
-        confirmar_pass = request.form["confirmar_pass"]
-
-        if nueva_pass != confirmar_pass:
-            flash("Las contraseñas no coinciden", "error")
-            return redirect("/recuperar")
-
-        cursor = db.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM login WHERE usuario = %s", (usuario,))
-        user = cursor.fetchone()
-
-        if not user:
-            flash("Usuario no encontrado", "error")
-            return redirect("/recuperar")
-
-        # Encriptar nueva contraseña
-        hash_pass = bcrypt.hashpw(nueva_pass.encode("utf-8"), bcrypt.gensalt())
-
-        cursor.execute("UPDATE login SET password = %s WHERE usuario = %s", (hash_pass, usuario))
-        db.commit()
-        cursor.close()
-
-        flash("Contraseña actualizada correctamente", "success")
-        return redirect(url_for("login"))
-    
-    return render_template("recuperar.html")
-
-# ------------------- LOGOUT -------------------
-@app.route('/logout')
-def logout():
-    usuario = session.get('usuario', 'Usuario')
-    rol = session.get('rol', 'Rol')
-    print(f"👋 Sesión cerrada: {usuario} | Rol: {rol}")
-    session.clear()
-    flash("Sesión cerrada correctamente 👋", "info")
-    return redirect(url_for('login'))
-
 # ------------------- RESTO DE RUTAS (sin cambios en funcionalidad) -------------------
 
 # Ruta para GUARDAR datos en la base de datos dentro de la tabla alumnos
@@ -1700,6 +1726,82 @@ def historial_alumno_pdf(numero_control):
         as_attachment=True,
         download_name=f'historial_{numero_control}_{datetime.now().strftime("%Y%m%d")}.pdf'
     )
+
+
+@app.route("/recuperar", methods=["GET", "POST"])
+def recuperar():
+    if request.method == "POST":
+        usuario = request.form["usuario"]
+        rol = request.form["rol"]
+        nueva_pass = request.form["nueva_pass"]
+        confirmar_pass = request.form["confirmar_pass"]
+
+        # Validar que las contraseñas coincidan
+        if nueva_pass != confirmar_pass:
+            flash("Las contraseñas no coinciden", "error")
+            return redirect("/recuperar")
+        
+        # Validar longitud mínima
+        if len(nueva_pass) < 8:
+            flash("La contraseña debe tener al menos 8 caracteres", "error")
+            return redirect("/recuperar")
+        
+        # Validar mayúscula
+        if not any(c.isupper() for c in nueva_pass):
+            flash("La contraseña debe contener al menos una mayúscula", "error")
+            return redirect("/recuperar")
+        
+        # Validar número
+        if not any(c.isdigit() for c in nueva_pass):
+            flash("La contraseña debe contener al menos un número", "error")
+            return redirect("/recuperar")
+
+        cursor = db.cursor(dictionary=True)
+        
+        # Determinar la tabla según el rol
+        tabla_rol = {
+            'Alumno': 'alumnoslog',
+            'Docente': 'docenteslog',
+            'Orientador': 'orientadoreslog',
+            'Directivo': 'directivoslog'
+        }
+        
+        if rol not in tabla_rol:
+            flash("Rol no válido", "error")
+            cursor.close()
+            return redirect("/recuperar")
+        
+        tabla = tabla_rol[rol]
+        
+        # Verificar si el usuario existe en la tabla correspondiente
+        cursor.execute(f"SELECT * FROM {tabla} WHERE usuario = %s", (usuario,))
+        user = cursor.fetchone()
+
+        if not user:
+            flash(f"Usuario no encontrado como {rol}", "error")
+            cursor.close()
+            return redirect("/recuperar")
+
+        # Actualizar contraseña (sin encriptar para mantener compatibilidad con tu sistema actual)
+        # NOTA: En producción deberías usar bcrypt para encriptar
+        cursor.execute(f"UPDATE {tabla} SET password = %s WHERE usuario = %s", (nueva_pass, usuario))
+        db.commit()
+        cursor.close()
+
+        # Limpiar intentos de login si existen
+        ip_address = request.remote_addr
+        clave_intento = f"{usuario}_{ip_address}"
+        if clave_intento in intentos_login:
+            del intentos_login[clave_intento]
+
+        flash(f"✅ Contraseña actualizada correctamente para {usuario} ({rol})", "success")
+        print(f"🔄 Contraseña actualizada: {usuario} | Rol: {rol}")
+        
+        # Redirigir al login después de 2 segundos
+        return redirect(url_for("login"))
+    
+    return render_template("recuperar.html")
+
 
 if __name__ == '__main__':
     app.run(debug=True) 
