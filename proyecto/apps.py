@@ -23,7 +23,7 @@ db = mysql.connector.connect(
 )
 # Configuración de intentos de login
 MAX_INTENTOS = 4
-TIEMPO_BLOQUEO_MINUTOS = 15
+TIEMPO_BLOQUEO_MINUTOS = 5
 
 # Diccionario en memoria para guardar intentos (se reinicia al reiniciar el servidor)
 intentos_login = {}
